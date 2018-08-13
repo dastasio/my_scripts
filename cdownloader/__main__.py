@@ -1,17 +1,40 @@
 import sys
 import os
-from downloader import download_single_chapter
-
-url = "https://readcomiconline.to/Comic/Marvel-Super-Heroes/Issue-13"
+import downloader as DL
+import error_logging as DEBUG
+import requests
 
 if __name__ == "__main__":
-    # checking if given url is from readcomiconline.to
-    domainCheck = url.find('readcomiconline.to')
-    if domainCheck == -1:
-        sys.exit("Error: given url is not recognized!")
+    # obtaining url
+    base_url = 'readcomiconline.to'
+    urlToDownload = ''
+    for arg in sys.argv:
+        if base_url in arg:
+            urlToDownload = arg
+            break
+    else:
+        DEBUG.exitWithError("no 'readcomiconline.to' url specified")
+
+    # getting url info
+    clean_url = urlToDownload.replace('https://', '').replace('http://', '').replace('readcomiconline.to/', '')
+    ## clean_url structure: "Comic/{Comic title}/{Issue number}"
+    clean_url = clean_url.split('/')
+    os.mkdir('temp')
+    if len(clean_url) == 3 and clean_url[0] == 'Comic':
+        # single-issue download
+        DL.download_issue(urlToDownload)
+    elif len(clean_url) == 2 and clean_url[0] == 'Comic':
+        pass # batch download
+    else:
+        # 'Comic' not present in url: path is not a comic page
+        os.removedirs('temp')
+        DEBUG.exitWithError('the given url is not recognized as a comic')
+    os.removedirs('temp')
     
+
+
     # guessing single chapter or batch
-    slashes = url[domainCheck:].split('/')
+    '''slashes = url[domainCheck:].split('/')
     if len(slashes) == 3:
         1 == 1
         # batch
@@ -21,4 +44,4 @@ if __name__ == "__main__":
         issue_number = slashes[3].replace('Issue-', '').replace('-', '.')
         out_dir = '{t} #{n}'.format(t=title, n=issue_number)
         #os.mkdir(out_dir)
-        download_single_chapter(url, out_dir)
+        download_single_chapter(url, out_dir)'''
