@@ -19,10 +19,13 @@ if __name__ == "__main__":
     clean_url = urlToDownload.replace('https://', '').replace('http://', '').replace('readcomiconline.to/', '')
     ## clean_url structure: "Comic/{Comic title}/{Issue number}"
     clean_url = clean_url.split('/')
-    os.mkdir('temp')
+    if not os.path.isdir('temp'):
+        os.mkdir('temp')
     if len(clean_url) == 3 and clean_url[0] == 'Comic':
         # single-issue download
-        DL.download_issue(urlToDownload)
+        #DL.download_issue(urlToDownload)
+        DL.download_issue("https://readcomiconline.to/Comic/The-Amazing-Spider-Man-1963/Annual-1?id=34815")
+        DL.download_issue("https://readcomiconline.to/Comic/The-Amazing-Spider-Man-1963/Annual-2?id=34826")
     elif len(clean_url) == 2 and clean_url[0] == 'Comic':
         pass # batch download
     else:

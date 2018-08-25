@@ -7,11 +7,12 @@ import sys
 import error_logging as DEBUG
 
 FILENAME_CLEANER = {'/': '-', '\\' : '-', ':' : ','}
+session = requests.session()
+session.cookies.update({'rco_readType':'1', 'rco_quality':'hq'})
 
 def get_page_html(url):
-    scraper = cfscrape.create_scraper(delay=10)
-    cookies = {'rco_readType':'1', 'rco_quality':'hq'}
-    return scraper.get(url, cookies=cookies).content.decode('utf-8')
+    scraper = cfscrape.create_scraper(sess=session)
+    return scraper.get(url).content.decode('utf-8')
 
 
 def download_issue(url, path = './', comicName = '', issueNumber = -1):
@@ -24,10 +25,12 @@ def download_issue(url, path = './', comicName = '', issueNumber = -1):
         # getting comic name
         titleTagStartIndex = source.find('<title>') + 7
         titleTagEndIndex = source.find('</title>')
-        titleTag = source[titleTagStartIndex : titleTagEndIndex].lstrip()
+        titleTag = ' '.join(source[titleTagStartIndex : titleTagEndIndex].split())
         titleEndIndex = -1
         if 'Issue' in titleTag:
             titleEndIndex = titleTag.find('Issue')
+        elif 'Annual' in titleTag:
+            titleEndIndex = titleTag.find('Annual')
         elif 'Full' in titleTag:
             titleEndIndex = titleTag.find('Full')
         elif 'TPB' in titleTag:
@@ -42,7 +45,7 @@ def download_issue(url, path = './', comicName = '', issueNumber = -1):
         issueNumberEndIndex = titleTag.find('- Read')
         if issueNumberEndIndex == -1:
             issueNumberEndIndex = titleTag.find('| Read')
-        issueNumber = titleTag[issueNumberStartIndex : issueNumberEndIndex].lstrip().rstrip().replace('Issue ', '')
+        issueNumber = titleTag[issueNumberStartIndex : issueNumberEndIndex].lstrip().rstrip().replace('Issue ', ' ')
     # cleaning forbidden characters in filenames
     for token in FILENAME_CLEANER:
         comicName = comicName.replace(token, FILENAME_CLEANER[token])
@@ -65,6 +68,7 @@ def download_issue(url, path = './', comicName = '', issueNumber = -1):
     out_cbz.close()
 
 def download_page(page_url, page_number, cbz_file):
+    print("Downloading page {p} for {f}".format(p=page_number, f=cbz_file))
     res = requests.get(page_url, stream=True)
     with open('temp/' + str(page_number) + '.jpeg', 'wb') as f:
         res.raw.decode_content = True
