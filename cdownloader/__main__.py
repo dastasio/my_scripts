@@ -23,9 +23,7 @@ if __name__ == "__main__":
         os.mkdir('temp')
     if len(clean_url) == 3 and clean_url[0] == 'Comic':
         # single-issue download
-        #DL.download_issue(urlToDownload)
-        DL.download_issue("https://readcomiconline.to/Comic/The-Amazing-Spider-Man-1963/Annual-1?id=34815")
-        DL.download_issue("https://readcomiconline.to/Comic/The-Amazing-Spider-Man-1963/Annual-2?id=34826")
+        DL.download_issue(urlToDownload)
     elif len(clean_url) == 2 and clean_url[0] == 'Comic':
         pass # batch download
     else:
