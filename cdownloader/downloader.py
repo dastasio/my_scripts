@@ -4,6 +4,7 @@ import shutil
 import zipfile
 import os
 import sys
+import re
 import error_logging as DEBUG
 
 FILENAME_CLEANER = {'/': '-', '\\' : '-', ':' : ','}
@@ -66,6 +67,78 @@ def download_issue(url, path = './', comicName = '', issueNumber = -1):
         download_page(page, count, out_cbz)
         count = count + 1
     out_cbz.close()
+
+def manage_batch(url, path = './', startIssue = -1, endIssue = -1):
+    source = get_page_html(url)
+    IssueListStart = source.find('<div class="heading"><h3>Issue(s)</h3></div>')
+    IssueListStart = source.find('<li>', IssueListStart)
+    IssueListEnd = source.find('</ul>', IssueListStart)
+    IssueListEnd = source.rfind('</li>', 0, IssueListEnd)
+    issues, annuals = get_issue_list(source[IssueListStart:IssueListEnd])
+    
+    if issues and annuals:
+        print("Monthly and Annual issues found!")
+    elif issues:
+        print('Issue list found!')
+    elif annuals:
+        print('Annuals list found!')
+    else:
+        DEBUG.exitWithError("No list of issues found")
+    selection = input('Enter range of issues to download: ')
+    if not selection.replace('a', '').replace('i', '').replace('-', '').replace(',', '').replace('.', '').isdigit():
+        DEBUG.exitWithError("Invalid range inserted")
+    batches = selection.split(',')
+    for batch in batches:
+        if 'a' in batch.lower():
+            batch = batch.lower().replace('a', '')
+            extremes = batch.split('-')
+            if len(extremes) == 1:
+                pass # TODO
+            else:
+                if 'i' in extremes[0].lower() or 'i' in extremes[1].lower():
+                    DEBUG.exitWithError("Error: you mixed monthly and annual releases in '" + batch + "'")
+                for n in annuals:
+                    number = re.findall('\d+\.\d+', n)
+                    if float(extremes[0]) <= number <= float(extremes[1]):
+                        download_issue(annuals[n])
+                    elif number > float(extremes[1]):
+                        break
+        elif 'i' in batch.lower():
+            batch = batch.lower().replace('i', '')
+            extremes = batch.split('-')
+            if len(extremes) == 1:
+                pass # TODO
+            else:
+                if 'a' in extremes[0].lower() or 'a' in extremes[1].lower():
+                    DEBUG.exitWithError("Error: you mixed monthly and annual releases in '" + batch + "'")
+                for n in issues:
+                    number = re.findall('\d+\.\d+', n)
+                    if len(number) != 0:
+                        number = float(number[0])
+                    else:
+                        number = float(re.findall('\d+', n)[0])
+                    if float(extremes[0]) <= number <= float(extremes[1]):
+                        download_issue(issues[n])
+                    elif number > float(extremes[1]):
+                        break
+            
+
+def get_issue_list(src):
+    issuesSRC = [line.strip() for line in src.split(os.linesep) if line.strip()]
+    issues = dict()
+    annuals = dict()
+    for item in reversed(issuesSRC):
+        number = item[item.find('<span>') + 6 : item.find('</span>')]
+        if 'Issue' in number:
+            issues[number] = 'https://readcomiconline.to' + item[item.find('"') + 1: item.rfind('"')]
+        elif 'Annual' in number:
+            annuals[number] = 'https://readcomiconline.to' + item[item.find('"') + 1: item.rfind('"')]
+    return issues, annuals
+
+def download_batch(urls, path = './', startIssue = -1, endIssue = -1):
+    with open('src.html', 'w') as f:
+        for n in iter(urls):
+            f.write(n + ': ' + urls[n] + '\n')
 
 def download_page(page_url, page_number, cbz_file):
     print("Downloading page {p} for {f}".format(p=page_number, f=cbz_file))

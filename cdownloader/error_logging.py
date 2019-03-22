@@ -2,5 +2,5 @@ import sys
 from os import removedirs
 
 def exitWithError(error = str):
-    removedirs('temp')
+    #removedirs('temp')
     sys.exit('Error: ' + error)

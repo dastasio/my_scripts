@@ -25,7 +25,7 @@ if __name__ == "__main__":
         # single-issue download
         DL.download_issue(urlToDownload)
     elif len(clean_url) == 2 and clean_url[0] == 'Comic':
-        pass # batch download
+        DL.manage_batch(urlToDownload)
     else:
         # 'Comic' not present in url: path is not a comic page
         os.removedirs('temp')
