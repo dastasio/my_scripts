@@ -1,3 +1,3 @@
 @echo off
-subst t: w:\Documents\handmade
+subst t: w:\os
 subst x: w:\Documents\d3d_workspace
